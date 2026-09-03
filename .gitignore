@@ -35,6 +35,7 @@ inventory.ini
 
 # Recovery evidence is generated locally; schemas and fixtures remain tracked
 artifacts/
+experiments/**/artifacts/
 *.log
 
 # Python/editor/OS

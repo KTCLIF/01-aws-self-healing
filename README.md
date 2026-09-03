@@ -39,6 +39,9 @@ Docker Swarm은 목표가 아니라 host 장애 시 workload rescheduling을 검
   - 후속 검증
   - alert별 JSON 응답과 JSONL runtime evidence
 - AWS 없이 실행하는 controller 자동 테스트와 정적 검증 명령
+- 격리된 3-node Docker-in-Docker Swarm Web Host Loss 실험
+  - process failure와 host failure를 같은 evidence contract로 비교
+  - surviving worker rescheduling과 HTTP recovery 시간 측정
 
 아직 AWS 리소스를 생성하거나 실제 HA failover를 수행하지 않았습니다. `terraform apply`는 자동화 검증 명령에 포함되지 않습니다.
 
@@ -72,6 +75,7 @@ make terraform-init
 │   ├── provenance.md         # 원본에서 계승/제외한 항목
 │   └── validation.md         # evidence와 검증 단계
 ├── infra/terraform/          # 비용 발생 없는 상태로 시작하는 2-AZ network baseline
+├── experiments/web-host-loss/# process/host failure local PoC
 ├── observability/prometheus/ # 선별 계승한 alert rules
 ├── recovery/controller/      # policy-driven webhook controller와 tests
 ├── tests/evidence/           # evidence schema/fixture용 추적 디렉터리
@@ -94,3 +98,5 @@ make terraform-init
 4. PostgreSQL 후보 비교 후 RPO/RTO가 있는 failover test 구현
 
 상세한 현재/목표 구조는 [docs/architecture.md](docs/architecture.md), 계승 근거는 [docs/provenance.md](docs/provenance.md)를 참고합니다.
+
+Web Host Loss 판정은 [ADR 0002](docs/adr/0002-docker-swarm-for-web-host-loss.md), 실제 local 결과는 [curated evidence](docs/evidence/web-host-loss-local-20260904.json)에 기록했습니다.

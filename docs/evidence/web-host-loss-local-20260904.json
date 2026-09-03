@@ -1,0 +1,84 @@
+{
+  "evidence_version": "1.0",
+  "environment": {
+    "type": "isolated-docker-in-docker",
+    "docker_engine": "26.1.3",
+    "topology": "one-manager-two-workers",
+    "service_image": "nginx@sha256:5f979dcfed4ce6461873f087e8c980d6e29b084b9e8776d9704a7e989b5f4898",
+    "replicas": 1
+  },
+  "runs": [
+    {
+      "schema_version": "1.0",
+      "run_id": "20260903T165708Z-9936",
+      "scenario": "process_failure",
+      "failure": {
+        "target": "worker-b",
+        "injection": "docker kill workload container; host remains healthy"
+      },
+      "pre_failure": {
+        "checked_at": "2026-09-03T16:58:17.949Z",
+        "service_responding": true,
+        "desired_replicas": 1,
+        "running_replicas": 1,
+        "workload_node": "worker-b"
+      },
+      "timeline": {
+        "failure_injected_at": "2026-09-03T16:58:17.951Z",
+        "failure_detected_at": "2026-09-03T16:58:18.329Z",
+        "recovery_started_at": "2026-09-03T16:58:23.433Z",
+        "workload_ready_at": "2026-09-03T16:58:25.713Z",
+        "service_recovered_at": "2026-09-03T16:58:25.763Z"
+      },
+      "recovery": {
+        "outcome": "success",
+        "mechanism": "Docker Swarm replaces the desired task on an available worker",
+        "total_duration_seconds": 7.813,
+        "detection_duration_seconds": 0.378,
+        "rescheduling_duration_seconds": 2.279,
+        "service_unavailable_observed": true,
+        "original_node": "worker-b",
+        "new_node": "worker-a"
+      },
+      "automatic_scope": "task replacement and routing-mesh service restoration",
+      "manual_scope": "root-cause remediation",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0",
+      "run_id": "20260903T165839Z-20268",
+      "scenario": "host_failure",
+      "failure": {
+        "target": "worker-a",
+        "injection": "docker stop worker Docker daemon container"
+      },
+      "pre_failure": {
+        "checked_at": "2026-09-03T16:59:48.777Z",
+        "service_responding": true,
+        "desired_replicas": 1,
+        "running_replicas": 1,
+        "workload_node": "worker-a"
+      },
+      "timeline": {
+        "failure_injected_at": "2026-09-03T16:59:48.778Z",
+        "failure_detected_at": "2026-09-03T17:00:02.342Z",
+        "recovery_started_at": "2026-09-03T17:00:07.112Z",
+        "workload_ready_at": "2026-09-03T17:00:10.692Z",
+        "service_recovered_at": "2026-09-03T17:00:10.740Z"
+      },
+      "recovery": {
+        "outcome": "success",
+        "mechanism": "Docker Swarm detects node loss and reschedules the desired task",
+        "total_duration_seconds": 21.961,
+        "detection_duration_seconds": 13.563,
+        "rescheduling_duration_seconds": 3.581,
+        "service_unavailable_observed": true,
+        "original_node": "worker-a",
+        "new_node": "worker-b"
+      },
+      "automatic_scope": "task replacement and routing-mesh service restoration",
+      "manual_scope": "failed host repair/rejoin and root-cause remediation",
+      "failure_reason": null
+    }
+  ]
+}

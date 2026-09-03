@@ -43,3 +43,13 @@ t5 alert resolved
 - observed recovery time = `t4 - t0`
 
 성공 판정은 process 상태뿐 아니라 외부 SLI와 desired capacity를 함께 검사해야 합니다.
+
+## Web Host Loss local result
+
+`experiments/web-host-loss/run-swarm-poc.sh`는 격리된 Docker-in-Docker Swarm을 만들고 process failure와 worker host failure를 동일한 evidence contract로 측정합니다.
+
+- Process Failure: 7.813초 후 HTTP recovery
+- Host Failure: 13.563초 후 failure 감지, 21.961초 후 surviving worker에서 HTTP recovery
+- 두 경우 모두 single replica이므로 failure window의 HTTP unavailable을 관찰
+
+Curated evidence: `docs/evidence/web-host-loss-local-20260904.json`

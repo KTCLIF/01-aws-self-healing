@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KTCLIF/01-aws-self-healing/web-host-loss-evidence.schema.json",
+  "title": "Web Host Loss Evidence",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "scenario",
+    "failure",
+    "pre_failure",
+    "timeline",
+    "recovery",
+    "failure_reason"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "scenario": { "enum": ["process_failure", "host_failure"] },
+    "failure": {
+      "type": "object",
+      "required": ["target", "injection"],
+      "properties": {
+        "target": { "type": "string" },
+        "injection": { "type": "string" }
+      }
+    },
+    "pre_failure": {
+      "type": "object",
+      "required": ["service_responding", "desired_replicas", "running_replicas", "workload_node"],
+      "properties": {
+        "service_responding": { "type": "boolean" },
+        "desired_replicas": { "type": "integer", "minimum": 1 },
+        "running_replicas": { "type": "integer", "minimum": 0 },
+        "workload_node": { "type": "string" }
+      }
+    },
+    "timeline": {
+      "type": "object",
+      "required": [
+        "failure_injected_at",
+        "failure_detected_at",
+        "recovery_started_at",
+        "workload_ready_at",
+        "service_recovered_at"
+      ],
+      "additionalProperties": { "type": ["string", "null"] }
+    },
+    "recovery": {
+      "type": "object",
+      "required": ["outcome", "mechanism", "total_duration_seconds", "original_node", "new_node"],
+      "properties": {
+        "outcome": { "enum": ["success", "failed"] },
+        "mechanism": { "type": "string" },
+        "total_duration_seconds": { "type": ["number", "null"], "minimum": 0 },
+        "detection_duration_seconds": { "type": ["number", "null"], "minimum": 0 },
+        "rescheduling_duration_seconds": { "type": ["number", "null"], "minimum": 0 },
+        "service_unavailable_observed": { "type": "boolean" },
+        "original_node": { "type": "string" },
+        "new_node": { "type": ["string", "null"] }
+      }
+    },
+    "failure_reason": { "type": ["string", "null"] }
+  }
+}

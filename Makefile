@@ -1,13 +1,14 @@
 PYTHON ?= python3
 TF_DIR := infra/terraform
 
-.PHONY: check test terraform-init terraform-fmt terraform-validate yaml-check shell-check secret-scan
+.PHONY: check test terraform-init terraform-fmt terraform-validate yaml-check shell-check secret-scan web-host-loss-process web-host-loss-host
 
 check: test terraform-fmt terraform-validate yaml-check shell-check secret-scan
 
 test:
 	$(PYTHON) -m unittest discover -s recovery/controller/tests -v
 	$(PYTHON) -m unittest discover -s recovery/nat_failover -p 'test_*.py' -v
+	$(PYTHON) -m unittest discover -s tests -p 'test_*.py' -v
 
 terraform-init:
 	terraform -chdir=$(TF_DIR) init -backend=false
@@ -22,8 +23,14 @@ yaml-check:
 	$(PYTHON) -c 'import json,pathlib,yaml; files=list(pathlib.Path(".").rglob("*.yml"))+list(pathlib.Path(".").rglob("*.yaml")); [yaml.safe_load(p.read_text()) for p in files]; [json.loads(p.read_text()) for p in pathlib.Path("recovery/controller/tests/fixtures").glob("*.json")]; print(f"parsed {len(files)} YAML files")'
 
 shell-check:
-	bash -n recovery/controller/scripts/*.sh
+	bash -n recovery/controller/scripts/*.sh experiments/web-host-loss/*.sh
 
 secret-scan:
 	@! git grep -nE '(AKIA[0-9A-Z]{16}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|hooks\.slack\.com/services/[A-Za-z0-9/_-]+)' -- ':!Makefile'
 	@! git ls-files | grep -E '(^|/)(terraform\.tfstate([.]|$$)|terraform\.tfvars$$|[^/]+[.]pem$$|secrets[.]yml$$)'
+
+web-host-loss-process:
+	./experiments/web-host-loss/run-swarm-poc.sh process
+
+web-host-loss-host:
+	./experiments/web-host-loss/run-swarm-poc.sh host
