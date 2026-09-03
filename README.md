@@ -23,13 +23,14 @@ failure injection
 - PostgreSQL의 failover와 복구가 명시한 RPO/RTO 안에서 완료되는가?
 - 복구 성공 여부와 시간을 반복 가능한 테스트 결과로 증명할 수 있는가?
 
-Docker Swarm은 목표가 아니라 host 장애 시 workload rescheduling을 검증할 때만 선택할 수 있는 수단입니다. 현재 baseline에는 포함하지 않았습니다.
+Docker Swarm은 목표가 아니라 host 장애 시 workload rescheduling을 검증할 때만 선택할 수 있는 수단입니다.
 
 ## 현재 구현 범위
 
 - 독립 Git 저장소와 비밀정보/state/key 차단 규칙
 - 2-AZ VPC와 AZ별 private route table
-- 단일 NAT instance를 계승하지 않고, `none`(기본) 또는 AZ별 NAT Gateway를 명시적으로 선택하는 네트워크 baseline
+- `none`(기본), 학습용 `instance_ha`, production reference인 `gateway_per_az` NAT mode
+- `instance_ha`의 AZ-local 정상 경로와 장애 시 surviving NAT로의 event-driven degraded route failover
 - 원본의 Prometheus alert rule을 선별해 보존한 초기 rule set
 - 원본 Recovery Controller 흐름을 재구성한 webhook controller
   - firing alert만 실행
@@ -80,16 +81,16 @@ make terraform-init
 ## 안전 및 비용 경계
 
 - 기본 `nat_mode = "none"`이므로 private subnet에 인터넷 기본 경로를 만들지 않습니다.
-- 실제 HA egress 검증 시에만 `nat_mode = "per_az"`를 선택합니다. NAT Gateway는 시간당/처리량 비용이 발생합니다.
+- `instance_ha`는 저비용 학습/장애 검증용이며 production best practice로 제시하지 않습니다.
+- `gateway_per_az`는 AZ 격리와 운영 단순성을 우선하는 production reference입니다. NAT Gateway는 시간당/처리량 비용이 발생합니다.
 - Terraform state, tfvars, private key, inventory, credential, runtime evidence는 Git에서 제외합니다.
 - 이 단계에서는 `plan/apply/destroy`, GitHub Actions, 외부 webhook 호출을 수행하지 않습니다.
 
 ## 다음 우선순위
 
-1. failure scenario contract와 공통 evidence collector 완성
-2. web workload의 host loss/rescheduling 방식 결정 및 로컬 실험
+1. Web Host Loss evidence를 AWS host termination scenario와 연결
+2. NAT `instance_ha`의 CloudWatch 감지/route failover를 최소 AWS 환경에서 측정
 3. monitoring/recovery control plane 이중화 모델과 중복 실행 방지 설계
 4. PostgreSQL 후보 비교 후 RPO/RTO가 있는 failover test 구현
-5. AWS에서 최소 범위의 multi-AZ/network failure 검증
 
 상세한 현재/목표 구조는 [docs/architecture.md](docs/architecture.md), 계승 근거는 [docs/provenance.md](docs/provenance.md)를 참고합니다.

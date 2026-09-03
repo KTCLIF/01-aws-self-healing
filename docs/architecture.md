@@ -8,13 +8,13 @@ Region
 └── AZ B: public subnet -> optional NAT B; private app/data subnets
 ```
 
-각 private subnet은 같은 AZ의 egress에만 연결합니다. `nat_mode=per_az`에서 한 NAT/AZ 장애가 다른 AZ의 egress까지 끊지 않도록 route table을 분리했습니다. 기본값 `none`은 비용과 의도치 않은 외부 통신을 막기 위한 local-validation 설정입니다.
+각 private subnet은 정상 상태에서 같은 AZ의 egress에만 연결합니다. `instance_ha`는 NAT instance host 장애를 감지하면 affected route만 surviving NAT instance로 바꾸는 degraded cross-AZ 경로를 사용합니다. `gateway_per_az`에서는 한 NAT/AZ 장애가 다른 AZ의 egress까지 끊지 않도록 route table을 분리합니다. 기본값 `none`은 비용과 의도치 않은 외부 통신을 막기 위한 local-validation 설정입니다.
 
 ## Target resilience model
 
 | Layer | Original behavior | Target behavior | Current state |
 |---|---|---|---|
-| Egress | AZ1 단일 NAT instance | AZ별 egress 또는 NAT 없는 private workload | Terraform baseline 구현, cloud 미검증 |
+| Egress | AZ1 단일 NAT instance | 학습용 route failover 또는 AZ별 managed NAT | Terraform/handler 구현, cloud 미검증 |
 | Web workload | 2 EC2의 service restart | host loss 후 healthy capacity/desired state 회복 | 미구현 |
 | PostgreSQL | 단일 EC2 PostgreSQL restart | replica/failover/backup restore + RPO/RTO evidence | 미구현 |
 | Monitoring | 단일 mgmt host | 감시 자체 장애를 탐지하고 지속 가능한 control plane | 미구현 |

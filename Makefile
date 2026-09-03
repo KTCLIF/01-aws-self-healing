@@ -7,6 +7,7 @@ check: test terraform-fmt terraform-validate yaml-check shell-check secret-scan
 
 test:
 	$(PYTHON) -m unittest discover -s recovery/controller/tests -v
+	$(PYTHON) -m unittest discover -s recovery/nat_failover -p 'test_*.py' -v
 
 terraform-init:
 	terraform -chdir=$(TF_DIR) init -backend=false

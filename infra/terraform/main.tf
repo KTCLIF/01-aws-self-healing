@@ -84,22 +84,22 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# NAT is deliberately opt-in because NAT Gateways incur hourly and data charges.
-# When enabled, each private app subnet uses the NAT Gateway in the same AZ.
-resource "aws_eip" "nat" {
-  count = var.nat_mode == "per_az" ? local.az_count : 0
+# Managed NAT is deliberately opt-in because NAT Gateways incur hourly and data charges.
+# The production reference keeps traffic AZ-local with one gateway per AZ.
+resource "aws_eip" "gateway_nat" {
+  count = var.nat_mode == "gateway_per_az" ? local.az_count : 0
 
   domain = "vpc"
-  tags   = { Name = "${var.project_name}-nat-${local.azs[count.index]}" }
+  tags   = { Name = "${var.project_name}-nat-gateway-${local.azs[count.index]}" }
 }
 
-resource "aws_nat_gateway" "this" {
-  count = var.nat_mode == "per_az" ? local.az_count : 0
+resource "aws_nat_gateway" "zonal" {
+  count = var.nat_mode == "gateway_per_az" ? local.az_count : 0
 
-  allocation_id = aws_eip.nat[count.index].id
+  allocation_id = aws_eip.gateway_nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
 
-  tags = { Name = "${var.project_name}-nat-${local.azs[count.index]}" }
+  tags = { Name = "${var.project_name}-nat-gateway-${local.azs[count.index]}" }
 
   depends_on = [aws_internet_gateway.main]
 }
@@ -110,10 +110,18 @@ resource "aws_route_table" "app" {
   vpc_id = aws_vpc.main.id
 
   dynamic "route" {
-    for_each = var.nat_mode == "per_az" ? [1] : []
+    for_each = var.nat_mode == "gateway_per_az" ? [1] : []
     content {
       cidr_block     = "0.0.0.0/0"
-      nat_gateway_id = aws_nat_gateway.this[count.index].id
+      nat_gateway_id = aws_nat_gateway.zonal[count.index].id
+    }
+  }
+
+  dynamic "route" {
+    for_each = var.nat_mode == "instance_ha" ? [1] : []
+    content {
+      cidr_block           = "0.0.0.0/0"
+      network_interface_id = aws_instance.nat[count.index].primary_network_interface_id
     }
   }
 

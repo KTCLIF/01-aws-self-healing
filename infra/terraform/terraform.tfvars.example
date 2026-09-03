@@ -2,5 +2,7 @@ project_name = "01-aws-self-healing"
 region       = "ap-northeast-2"
 vpc_cidr     = "10.40.0.0/16"
 
-# Keep none for local validation. per_az creates two billable NAT Gateways on apply.
+# Keep none for local validation. Other modes create billable resources on apply.
+# instance_ha is a low-cost learning/failure-recovery experiment.
+# gateway_per_az is the lower-operations production reference.
 nat_mode = "none"

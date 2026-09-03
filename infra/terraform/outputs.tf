@@ -16,6 +16,11 @@ output "data_subnet_ids" {
 }
 
 output "nat_mode" {
-  description = "Selected egress strategy; per_az creates billable resources on apply."
+  description = "Selected egress strategy; both non-none modes create billable resources on apply."
   value       = var.nat_mode
+}
+
+output "nat_failover_alarm_names" {
+  description = "CloudWatch alarms that invoke route failover in instance_ha mode."
+  value       = aws_cloudwatch_metric_alarm.nat_status[*].alarm_name
 }

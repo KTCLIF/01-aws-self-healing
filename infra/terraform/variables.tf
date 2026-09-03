@@ -27,12 +27,18 @@ variable "vpc_cidr" {
 }
 
 variable "nat_mode" {
-  description = "none creates no NAT resources; per_az creates one NAT Gateway and private default route per AZ."
+  description = "Egress mode: none, instance_ha for the recovery lab, or gateway_per_az for the production reference."
   type        = string
   default     = "none"
 
   validation {
-    condition     = contains(["none", "per_az"], var.nat_mode)
-    error_message = "nat_mode must be either none or per_az."
+    condition     = contains(["none", "instance_ha", "gateway_per_az"], var.nat_mode)
+    error_message = "nat_mode must be none, instance_ha, or gateway_per_az."
   }
+}
+
+variable "nat_instance_type" {
+  description = "EC2 size used only by the low-cost instance_ha experiment."
+  type        = string
+  default     = "t3.micro"
 }
