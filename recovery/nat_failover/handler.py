@@ -8,6 +8,11 @@ import time
 DESTINATION = "0.0.0.0/0"
 
 
+def trigger_from_event(event):
+    detail = event.get("detail", {})
+    return detail.get("alarmName") or detail.get("instance-id", "")
+
+
 def _standby_is_healthy(ec2, instance_id):
     response = ec2.describe_instance_status(
         InstanceIds=[instance_id], IncludeAllInstances=True
@@ -66,8 +71,8 @@ def failover(alarm_name, mappings, ec2, clock=time.time):
 def lambda_handler(event, _context):
     import boto3
 
-    alarm_name = event.get("detail", {}).get("alarmName", "")
+    trigger = trigger_from_event(event)
     mappings = json.loads(os.environ["FAILOVER_MAP"])
-    result = failover(alarm_name, mappings, boto3.client("ec2"))
-    print(json.dumps({"alarm_name": alarm_name, **result}, sort_keys=True))
+    result = failover(trigger, mappings, boto3.client("ec2"))
+    print(json.dumps({"trigger": trigger, **result}, sort_keys=True))
     return result

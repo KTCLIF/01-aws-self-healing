@@ -72,11 +72,25 @@ resource "aws_lambda_function" "nat_failover" {
   environment {
     variables = {
       FAILOVER_MAP = jsonencode({
-        for index in range(local.az_count) :
-        aws_cloudwatch_metric_alarm.nat_status[index].alarm_name => {
-          route_table_id     = aws_route_table.app[index].id
-          standby_instance   = aws_instance.nat[1 - index].id
-          standby_network_if = aws_instance.nat[1 - index].primary_network_interface_id
+        for item in flatten([
+          for index in range(local.az_count) : [
+            {
+              key                = aws_cloudwatch_metric_alarm.nat_status[index].alarm_name
+              route_table_id     = aws_route_table.app[index].id
+              standby_instance   = aws_instance.nat[1 - index].id
+              standby_network_if = aws_instance.nat[1 - index].primary_network_interface_id
+            },
+            {
+              key                = aws_instance.nat[index].id
+              route_table_id     = aws_route_table.app[index].id
+              standby_instance   = aws_instance.nat[1 - index].id
+              standby_network_if = aws_instance.nat[1 - index].primary_network_interface_id
+            }
+          ]
+          ]) : item.key => {
+          route_table_id     = item.route_table_id
+          standby_instance   = item.standby_instance
+          standby_network_if = item.standby_network_if
         }
       })
     }
@@ -116,4 +130,35 @@ resource "aws_lambda_permission" "nat_failover" {
   function_name = aws_lambda_function.nat_failover[0].function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.nat_failover[0].arn
+}
+
+resource "aws_cloudwatch_event_rule" "nat_instance_state" {
+  count = var.nat_mode == "instance_ha" ? 1 : 0
+
+  name = "${var.project_name}-nat-instance-state"
+  event_pattern = jsonencode({
+    source      = ["aws.ec2"]
+    detail-type = ["EC2 Instance State-change Notification"]
+    detail = {
+      instance-id = aws_instance.nat[*].id
+      state       = ["stopped", "shutting-down", "terminated"]
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "nat_instance_state" {
+  count = var.nat_mode == "instance_ha" ? 1 : 0
+
+  rule = aws_cloudwatch_event_rule.nat_instance_state[0].name
+  arn  = aws_lambda_function.nat_failover[0].arn
+}
+
+resource "aws_lambda_permission" "nat_instance_state" {
+  count = var.nat_mode == "instance_ha" ? 1 : 0
+
+  statement_id  = "AllowEC2StateEvent"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.nat_failover[0].function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.nat_instance_state[0].arn
 }

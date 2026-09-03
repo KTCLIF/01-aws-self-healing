@@ -96,7 +96,7 @@ resource "aws_cloudwatch_metric_alarm" "nat_status" {
   datapoints_to_alarm = 2
   threshold           = 1
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  treat_missing_data  = "breaching"
+  treat_missing_data  = "notBreaching"
 
   dimensions = {
     InstanceId = aws_instance.nat[count.index].id

@@ -36,7 +36,7 @@ References:
 
 1. 두 NAT instance를 각각 다른 AZ에 둡니다.
 2. 각 app subnet은 정상 상태에서 같은 AZ NAT를 사용합니다.
-3. 2회 연속 EC2 `StatusCheckFailed`를 CloudWatch alarm으로 감지합니다.
+3. 2회 연속 EC2 `StatusCheckFailed`를 CloudWatch alarm으로 감지하고, stopped/terminated 계열은 EC2 state-change event로 즉시 감지합니다. 초기 metric 누락은 false failover 방지를 위해 정상으로 처리합니다.
 4. EventBridge가 Lambda를 호출합니다.
 5. Lambda는 standby instance의 instance/system status가 모두 `ok`인지 확인합니다.
 6. affected AZ의 app route만 standby NAT ENI로 교체합니다.

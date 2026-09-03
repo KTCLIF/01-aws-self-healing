@@ -44,6 +44,16 @@ class FakeEC2:
 
 
 class NatFailoverTest(unittest.TestCase):
+    def test_extracts_cloudwatch_alarm_or_ec2_instance_trigger(self):
+        self.assertEqual(
+            HANDLER.trigger_from_event({"detail": {"alarmName": "alarm-a"}}),
+            "alarm-a",
+        )
+        self.assertEqual(
+            HANDLER.trigger_from_event({"detail": {"instance-id": "i-a"}}),
+            "i-a",
+        )
+
     def test_replaces_failed_route_with_healthy_standby(self):
         ec2 = FakeEC2()
         result = HANDLER.failover("nat-a-failed", MAPPINGS, ec2)
