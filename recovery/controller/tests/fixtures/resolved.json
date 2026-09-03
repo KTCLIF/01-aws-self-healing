@@ -1,0 +1,12 @@
+{
+  "status": "resolved",
+  "alerts": [
+    {
+      "status": "resolved",
+      "labels": {
+        "alertname": "NginxDown",
+        "instance": "web-a:9113"
+      }
+    }
+  ]
+}

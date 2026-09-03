@@ -1,0 +1,42 @@
+groups:
+  - name: service-self-healing
+    rules:
+      - alert: NginxDown
+        expr: nginx_up == 0
+        for: 10s
+        labels:
+          severity: critical
+          recovery_policy: service-restart
+        annotations:
+          summary: Nginx endpoint is unavailable
+          description: "Nginx on {{ $labels.instance }} has been unavailable for at least 10 seconds."
+
+      - alert: NginxExporterDown
+        expr: up{job="nginx-exporters"} == 0
+        for: 10s
+        labels:
+          severity: critical
+          recovery_policy: service-restart
+        annotations:
+          summary: Nginx exporter is unavailable
+          description: "Metrics collection from {{ $labels.instance }} has stopped."
+
+      - alert: HighCPU
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{job="web-servers", mode="idle"}[1m])) * 100) > 80
+        for: 30s
+        labels:
+          severity: warning
+          recovery_policy: clear-test-stress
+        annotations:
+          summary: Sustained high CPU on a web host
+          description: "CPU usage on {{ $labels.instance }} has exceeded 80% for 30 seconds."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes{job="web-servers"} / node_memory_MemTotal_bytes{job="web-servers"})) * 100 > 70
+        for: 30s
+        labels:
+          severity: warning
+          recovery_policy: clear-test-stress
+        annotations:
+          summary: Sustained high memory use on a web host
+          description: "Memory usage on {{ $labels.instance }} has exceeded 70% for 30 seconds."

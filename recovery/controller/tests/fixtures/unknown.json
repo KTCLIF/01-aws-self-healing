@@ -1,0 +1,12 @@
+{
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "UnknownAlert",
+        "instance": "host-a:9100"
+      }
+    }
+  ]
+}

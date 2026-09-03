@@ -1,0 +1,35 @@
+NginxDown:
+  max_attempts: 3
+  cooldown_seconds: 60
+  action:
+    executable: scripts/recover_service.sh
+    args: [webservers, nginx]
+    timeout_seconds: 60
+  verify:
+    executable: scripts/verify_service.sh
+    args: [webservers, nginx]
+    timeout_seconds: 30
+
+NginxExporterDown:
+  max_attempts: 3
+  cooldown_seconds: 60
+  action:
+    executable: scripts/recover_service.sh
+    args: [webservers, nginx_exporter]
+  verify:
+    executable: scripts/verify_service.sh
+    args: [webservers, nginx_exporter]
+
+HighCPU:
+  max_attempts: 2
+  cooldown_seconds: 120
+  action:
+    executable: scripts/clear_stress.sh
+    args: [webservers, cpu]
+
+HighMemoryUsage:
+  max_attempts: 2
+  cooldown_seconds: 120
+  action:
+    executable: scripts/clear_stress.sh
+    args: [webservers, memory]

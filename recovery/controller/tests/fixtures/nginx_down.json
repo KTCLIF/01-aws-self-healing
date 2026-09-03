@@ -1,0 +1,13 @@
+{
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "NginxDown",
+        "instance": "web-a:9113",
+        "severity": "critical"
+      }
+    }
+  ]
+}

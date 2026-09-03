@@ -1,0 +1,6 @@
+project_name = "01-aws-self-healing"
+region       = "ap-northeast-2"
+vpc_cidr     = "10.40.0.0/16"
+
+# Keep none for local validation. per_az creates two billable NAT Gateways on apply.
+nat_mode = "none"

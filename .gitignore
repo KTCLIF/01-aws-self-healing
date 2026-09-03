@@ -1,0 +1,47 @@
+# Secrets and local credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+**/secrets.yml
+**/vault-password*
+.aws/
+
+# Terraform local and sensitive artifacts
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ansible/runtime artifacts
+.ansible/
+*.retry
+inventory.yml
+inventory.ini
+!inventory.example.yml
+
+# Recovery evidence is generated locally; schemas and fixtures remain tracked
+artifacts/
+*.log
+
+# Python/editor/OS
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.DS_Store
+Thumbs.db
+*.swp
+*~
