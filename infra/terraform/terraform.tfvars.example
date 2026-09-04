@@ -1,5 +1,5 @@
 resource_prefix = "p01-self-healing"
-aws_profile     = "p1-personal"
+aws_profile     = "default"
 region          = "ap-northeast-2"
 vpc_cidr        = "10.40.0.0/16"
 

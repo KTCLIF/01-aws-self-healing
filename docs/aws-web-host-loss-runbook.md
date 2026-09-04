@@ -2,8 +2,8 @@
 
 ## Hard isolation gates
 
-1. Use a dedicated CLI profile for the personal P1 account; do not rely on whichever `default` credential is active.
-2. Set the expected personal account ID only in the shell environment or ignored tfvars.
+1. Use only the `default` CLI profile that the owner independently matched to the personal account in the AWS Console. Never use an integration-project profile for P1.
+2. Set the expected personal account ID only in the shell environment or ignored tfvars. Obtain it from the independently verified Console record, not by assigning the STS output back as the expectation.
 3. Run the account guard and stop on any mismatch.
 4. Use region `ap-northeast-2` unless a new estimate/plan explicitly approves another region.
 5. Confirm the P1 state path is `infra/terraform/state/p01-self-healing.tfstate` and the integration project state is elsewhere.
@@ -11,9 +11,13 @@
 7. Confirm all taggable resources inherit `Project=01-aws-self-healing`, `Owner=KTCLIF`, `Purpose=portfolio-resilience-test` and names use `p01-self-healing`.
 
 ```bash
-export AWS_PROFILE=p1-personal
+export AWS_PROFILE=default
+export ALLOW_DEFAULT_PROFILE_FOR_P1=yes
 export P1_EXPECTED_ACCOUNT_ID='<personal account ID>'
 export P1_EXPECTED_REGION=ap-northeast-2
+
+aws sts get-caller-identity --profile default
+# Manually compare Account with the independently recorded personal account ID.
 ./scripts/aws-account-guard.sh
 
 export TF_VAR_aws_profile="$AWS_PROFILE"
@@ -39,12 +43,12 @@ web_ingress_cidrs = ["<operator-public-ip>/32"]
 
 ## Execution
 
-1. Run `terraform init -reconfigure`, `terraform plan`, review create-only actions, then explicitly approve `terraform apply`.
+1. Immediately before apply, run `aws sts get-caller-identity --profile default`, manually compare the account, run the account guard, then run `terraform init -reconfigure` and `terraform plan`. Review create-only actions before explicitly approving `terraform apply`.
 2. Wait for ASG `2/2 InService` and ALB target group `2/2 healthy`.
 3. Export `WEB_ASG_NAME`, `WEB_TARGET_GROUP_ARN`, and `WEB_ALB_URL` from Terraform outputs.
 4. Start the continuous HTTP probe through `run-experiment.sh`; it records a 10-second baseline before failure.
 5. The harness selects one current `InService` instance explicitly and records its ID only in ignored runtime evidence.
-6. Set `EXECUTE_AWS_HOST_LOSS=yes` only after verifying the selected account/profile/region and target.
+6. Immediately before destructive injection, repeat `aws sts get-caller-identity --profile default`, the manual account comparison, and the account guard. Set `EXECUTE_AWS_HOST_LOSS=yes` only after verifying the selected account/profile/region and target.
 7. The harness re-runs the account guard with the explicit profile, then terminates that instance.
 8. Record victim ALB target transition away from `healthy`.
 9. Record the first replacement instance observed in the ASG.

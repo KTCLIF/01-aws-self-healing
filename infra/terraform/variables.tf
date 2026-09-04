@@ -10,7 +10,7 @@ variable "resource_prefix" {
 }
 
 variable "aws_profile" {
-  description = "Explicit AWS CLI profile selected for P1. Use a dedicated personal-account profile before apply."
+  description = "Explicit AWS CLI profile independently verified as the personal P1 account before apply."
   type        = string
 
   validation {

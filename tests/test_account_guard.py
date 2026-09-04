@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GUARD = ROOT / "scripts" / "aws-account-guard.sh"
 EXPERIMENT = ROOT / "experiments" / "aws-web-host-loss" / "run-experiment.sh"
+RUNBOOK = ROOT / "docs" / "aws-web-host-loss-runbook.md"
 
 
 class AwsAccountGuardTest(unittest.TestCase):
@@ -44,6 +45,12 @@ class AwsAccountGuardTest(unittest.TestCase):
         text = EXPERIMENT.read_text(encoding="utf-8")
         self.assertIn('scripts/aws-account-guard.sh', text)
         self.assertIn('--profile "$profile"', text)
+
+    def test_runbook_requires_independent_default_profile_check(self):
+        text = RUNBOOK.read_text(encoding="utf-8")
+        self.assertIn("aws sts get-caller-identity --profile default", text)
+        self.assertIn("ALLOW_DEFAULT_PROFILE_FOR_P1=yes", text)
+        self.assertIn("not by assigning the STS output back as the expectation", text)
 
 
 if __name__ == "__main__":
