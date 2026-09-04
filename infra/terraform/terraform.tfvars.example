@@ -6,3 +6,8 @@ vpc_cidr     = "10.40.0.0/16"
 # instance_ha is a low-cost learning/failure-recovery experiment.
 # gateway_per_az is the lower-operations production reference.
 nat_mode = "none"
+
+# ALB and two EC2 instances are billable and remain disabled until an approved AWS experiment.
+enable_web_asg   = false
+web_instance_type = "t3.micro"
+web_ingress_cidrs = ["203.0.113.10/32"]

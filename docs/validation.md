@@ -53,3 +53,7 @@ t5 alert resolved
 - 두 경우 모두 single replica이므로 failure window의 HTTP unavailable을 관찰
 
 Curated evidence: `docs/evidence/web-host-loss-local-20260904.json`
+
+Multi-replica follow-up은 2 replicas를 서로 다른 workers에 배치하고 세 번째 worker를 spare로 사용했습니다. Worker 하나를 상실한 뒤 최종 convergence는 20.417초였으나 continuous HTTP probe 137건 중 6건이 실패해 `degraded_with_intermittent_errors`로 판정했습니다.
+
+AWS ALB+ASG 결과는 아직 없습니다. `experiments/aws-web-host-loss/run-experiment.sh`는 실제 승인된 배포 후 instance termination, target health, ASG convergence, continuous HTTP 결과를 같은 availability metric으로 수집하도록 준비되어 있습니다.

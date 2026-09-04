@@ -23,7 +23,7 @@ yaml-check:
 	$(PYTHON) -c 'import json,pathlib,yaml; files=list(pathlib.Path(".").rglob("*.yml"))+list(pathlib.Path(".").rglob("*.yaml")); [yaml.safe_load(p.read_text()) for p in files]; [json.loads(p.read_text()) for p in pathlib.Path("recovery/controller/tests/fixtures").glob("*.json")]; print(f"parsed {len(files)} YAML files")'
 
 shell-check:
-	bash -n recovery/controller/scripts/*.sh experiments/web-host-loss/*.sh
+	bash -n recovery/controller/scripts/*.sh experiments/web-host-loss/*.sh experiments/aws-web-host-loss/*.sh
 
 secret-scan:
 	@! git grep -nE '(AKIA[0-9A-Z]{16}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|hooks\.slack\.com/services/[A-Za-z0-9/_-]+)' -- ':!Makefile'

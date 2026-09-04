@@ -15,7 +15,7 @@ Region
 | Layer | Original behavior | Target behavior | Current state |
 |---|---|---|---|
 | Egress | AZ1 단일 NAT instance | 학습용 route failover 또는 AZ별 managed NAT | Terraform/handler 구현, cloud 미검증 |
-| Web workload | 2 EC2의 service restart | host loss 후 healthy capacity/desired state 회복 | 미구현 |
+| Web workload | 2 EC2의 service restart | local Swarm availability 비교; AWS ALB+ASG capacity/traffic recovery | Terraform 구현, AWS 미검증 |
 | PostgreSQL | 단일 EC2 PostgreSQL restart | replica/failover/backup restore + RPO/RTO evidence | 미구현 |
 | Monitoring | 단일 mgmt host | 감시 자체 장애를 탐지하고 지속 가능한 control plane | 미구현 |
 | Recovery | 단일 in-memory cooldown | 중복 실행 방지, idempotency, controller failover | local controller/evidence만 구현 |
@@ -31,6 +31,6 @@ Region
 
 ## Decision gates before adding technology
 
-- Docker Swarm은 EC2 host termination에서 rescheduling time과 capacity restoration을 검증할 구체적인 scenario가 승인될 때만 도입합니다.
+- Docker Swarm은 local stateless web resilience 실험에만 사용합니다. AWS web 검증은 ADR 0003에 따라 ALB+ASG를 사용합니다.
 - PostgreSQL은 RPO/RTO, 비용 한도, 자동 failover 범위를 먼저 정한 뒤 RDS Multi-AZ, self-managed replication 등을 비교합니다.
 - control plane은 active/active 여부보다 alert deduplication과 recovery action idempotency를 먼저 설계합니다.

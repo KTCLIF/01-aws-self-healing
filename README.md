@@ -39,9 +39,13 @@ Docker Swarm은 목표가 아니라 host 장애 시 workload rescheduling을 검
   - 후속 검증
   - alert별 JSON 응답과 JSONL runtime evidence
 - AWS 없이 실행하는 controller 자동 테스트와 정적 검증 명령
-- 격리된 3-node Docker-in-Docker Swarm Web Host Loss 실험
+- 격리된 Docker-in-Docker Swarm Web Host Loss 실험
   - process failure와 host failure를 같은 evidence contract로 비교
   - surviving worker rescheduling과 HTTP recovery 시간 측정
+- 기본 비활성화된 AWS Web Host Loss 정적 구성
+  - 2-AZ ALB + desired capacity 2 ASG
+  - ELB health 기반 instance replacement
+  - continuous HTTP/target health/capacity evidence harness
 
 아직 AWS 리소스를 생성하거나 실제 HA failover를 수행하지 않았습니다. `terraform apply`는 자동화 검증 명령에 포함되지 않습니다.
 
@@ -102,3 +106,5 @@ make terraform-init
 Web Host Loss 판정은 [ADR 0002](docs/adr/0002-docker-swarm-for-web-host-loss.md), 실제 local 결과는 [curated evidence](docs/evidence/web-host-loss-local-20260904.json)에 기록했습니다.
 
 Multi-replica availability 실험은 최종 convergence에 성공했지만 간헐적 오류가 있어 무중단으로 판정하지 않았습니다. 결과는 [availability 비교](docs/web-availability-results.md)와 [multi-replica evidence](docs/evidence/web-multi-replica-host-loss-local-20260904.json)에 있습니다.
+
+AWS Web Host Loss는 [ADR 0003](docs/adr/0003-aws-web-host-recovery.md)에 따라 ALB+ASG로 검증하며, 실제 실행 전까지 `enable_web_asg=false`를 유지합니다.

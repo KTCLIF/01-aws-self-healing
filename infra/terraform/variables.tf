@@ -42,3 +42,26 @@ variable "nat_instance_type" {
   type        = string
   default     = "t3.micro"
 }
+
+variable "enable_web_asg" {
+  description = "Create the ALB and two-instance ASG used by the AWS host-loss experiment."
+  type        = bool
+  default     = false
+}
+
+variable "web_instance_type" {
+  description = "EC2 instance type for the stateless web ASG experiment."
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "web_ingress_cidrs" {
+  description = "IPv4 CIDRs allowed to send HTTP probes to the public ALB. Narrow this for an actual experiment."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = !var.enable_web_asg || (length(var.web_ingress_cidrs) > 0 && alltrue([for cidr in var.web_ingress_cidrs : can(cidrnetmask(cidr))]))
+    error_message = "When enable_web_asg is true, web_ingress_cidrs must contain at least one valid IPv4 CIDR."
+  }
+}
