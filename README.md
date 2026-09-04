@@ -108,3 +108,5 @@ Web Host Loss 판정은 [ADR 0002](docs/adr/0002-docker-swarm-for-web-host-loss.
 Multi-replica availability 실험은 최종 convergence에 성공했지만 간헐적 오류가 있어 무중단으로 판정하지 않았습니다. 결과는 [availability 비교](docs/web-availability-results.md)와 [multi-replica evidence](docs/evidence/web-multi-replica-host-loss-local-20260904.json)에 있습니다.
 
 AWS Web Host Loss는 [ADR 0003](docs/adr/0003-aws-web-host-recovery.md)에 따라 ALB+ASG로 검증하며, 실제 실행 전까지 `enable_web_asg=false`를 유지합니다.
+
+실행 전에는 [비용 추정](docs/aws-web-cost-estimate.md)과 [격리·실행 runbook](docs/aws-web-host-loss-runbook.md)을 검토해야 합니다.

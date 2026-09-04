@@ -1,6 +1,10 @@
-project_name = "01-aws-self-healing"
-region       = "ap-northeast-2"
-vpc_cidr     = "10.40.0.0/16"
+resource_prefix = "p01-self-healing"
+aws_profile     = "p1-personal"
+region          = "ap-northeast-2"
+vpc_cidr        = "10.40.0.0/16"
+
+# Supply securely with TF_VAR_expected_account_id or an ignored terraform.tfvars.
+# Never commit an actual account ID.
 
 # Keep none for local validation. Other modes create billable resources on apply.
 # instance_ha is a low-cost learning/failure-recovery experiment.

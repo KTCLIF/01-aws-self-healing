@@ -11,6 +11,10 @@ for command in aws curl jq python3; do
   command -v "$command" >/dev/null || { echo "$command is required" >&2; exit 2; }
 done
 
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+"${script_dir}/../../scripts/aws-account-guard.sh"
+
+profile="${AWS_PROFILE:?AWS_PROFILE must name the dedicated P1 profile}"
 asg_name="${WEB_ASG_NAME:?WEB_ASG_NAME is required}"
 target_group_arn="${WEB_TARGET_GROUP_ARN:?WEB_TARGET_GROUP_ARN is required}"
 alb_url="${WEB_ALB_URL:?WEB_ALB_URL is required}"
@@ -20,7 +24,6 @@ if ! [[ "$probe_interval_ms" =~ ^[0-9]+$ ]] || (( probe_interval_ms < 50 || prob
   exit 2
 fi
 region="${AWS_REGION:-ap-northeast-2}"
-script_dir="$(cd "$(dirname "$0")" && pwd)"
 artifact_dir="${script_dir}/artifacts"
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 probe_log="${artifact_dir}/${run_id}-probes.tsv"
@@ -43,13 +46,13 @@ iso_now() { date -u +%Y-%m-%dT%H:%M:%S.%3NZ; }
 ms_now() { date -u +%s%3N; }
 seconds_between() { awk -v start="$1" -v end="$2" 'BEGIN { printf "%.3f", (end-start)/1000 }'; }
 
-asg_json="$(aws autoscaling describe-auto-scaling-groups --region "$region" \
+asg_json="$(aws autoscaling describe-auto-scaling-groups --profile "$profile" --region "$region" \
   --auto-scaling-group-names "$asg_name" --output json)"
 desired="$(jq -r '.AutoScalingGroups[0].DesiredCapacity' <<<"$asg_json")"
 mapfile -t original_instances < <(jq -r '.AutoScalingGroups[0].Instances[] | select(.LifecycleState == "InService") | .InstanceId' <<<"$asg_json")
 [[ "${#original_instances[@]}" -eq "$desired" ]] || { echo "ASG is not converged before injection" >&2; exit 1; }
 
-target_json="$(aws elbv2 describe-target-health --region "$region" --target-group-arn "$target_group_arn")"
+target_json="$(aws elbv2 describe-target-health --profile "$profile" --region "$region" --target-group-arn "$target_group_arn")"
 healthy_count="$(jq '[.TargetHealthDescriptions[] | select(.TargetHealth.State == "healthy")] | length' <<<"$target_json")"
 [[ "$healthy_count" -eq "$desired" ]] || { echo "target group is not healthy before injection" >&2; exit 1; }
 
@@ -61,7 +64,7 @@ sleep 10
 victim="${original_instances[0]}"
 failure_at="$(iso_now)"
 failure_ms="$(ms_now)"
-aws ec2 terminate-instances --region "$region" --instance-ids "$victim" >/dev/null
+aws ec2 terminate-instances --profile "$profile" --region "$region" --instance-ids "$victim" >/dev/null
 
 detection_at=""
 replacement_at=""
@@ -72,9 +75,9 @@ deadline=$(( $(date +%s) + 600 ))
 
 while (( $(date +%s) < deadline )); do
   now="$(iso_now)"
-  asg_json="$(aws autoscaling describe-auto-scaling-groups --region "$region" \
+  asg_json="$(aws autoscaling describe-auto-scaling-groups --profile "$profile" --region "$region" \
     --auto-scaling-group-names "$asg_name" --output json)"
-  target_json="$(aws elbv2 describe-target-health --region "$region" \
+  target_json="$(aws elbv2 describe-target-health --profile "$profile" --region "$region" \
     --target-group-arn "$target_group_arn" --output json)"
 
   victim_state="$(jq -r --arg id "$victim" '.TargetHealthDescriptions[]? | select(.Target.Id == $id) | .TargetHealth.State' <<<"$target_json")"

@@ -1,11 +1,32 @@
-variable "project_name" {
-  description = "Name prefix used for resources and tags."
+variable "resource_prefix" {
+  description = "Dedicated P1 resource name prefix."
   type        = string
-  default     = "01-aws-self-healing"
+  default     = "p01-self-healing"
 
   validation {
-    condition     = can(regex("^[a-z0-9-]+$", var.project_name))
-    error_message = "project_name must contain only lowercase letters, digits, and hyphens."
+    condition     = var.resource_prefix == "p01-self-healing"
+    error_message = "resource_prefix is fixed to p01-self-healing for account isolation."
+  }
+}
+
+variable "aws_profile" {
+  description = "Explicit AWS CLI profile selected for P1. Use a dedicated personal-account profile before apply."
+  type        = string
+
+  validation {
+    condition     = length(trimspace(var.aws_profile)) > 0
+    error_message = "aws_profile must be explicit."
+  }
+}
+
+variable "expected_account_id" {
+  description = "Expected personal AWS account ID; supplied securely and never committed."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^[0-9]{12}$", var.expected_account_id))
+    error_message = "expected_account_id must be a 12-digit AWS account ID."
   }
 }
 

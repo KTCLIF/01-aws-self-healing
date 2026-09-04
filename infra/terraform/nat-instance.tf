@@ -18,7 +18,7 @@ data "aws_ami" "nat" {
 resource "aws_security_group" "nat_instance" {
   count = var.nat_mode == "instance_ha" ? 1 : 0
 
-  name_prefix = "${var.project_name}-nat-"
+  name_prefix = "${var.resource_prefix}-nat-"
   description = "Allow private app subnets to use the NAT instances"
   vpc_id      = aws_vpc.main.id
 
@@ -37,7 +37,7 @@ resource "aws_security_group" "nat_instance" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "${var.project_name}-nat-instance" }
+  tags = { Name = "${var.resource_prefix}-nat-instance" }
 }
 
 resource "aws_instance" "nat" {
@@ -63,7 +63,7 @@ resource "aws_instance" "nat" {
   }
 
   tags = {
-    Name = "${var.project_name}-nat-instance-${local.azs[count.index]}"
+    Name = "${var.resource_prefix}-nat-instance-${local.azs[count.index]}"
     Role = "nat-instance"
     AZ   = local.azs[count.index]
   }
@@ -73,7 +73,7 @@ resource "aws_eip" "nat_instance" {
   count = var.nat_mode == "instance_ha" ? local.az_count : 0
 
   domain = "vpc"
-  tags   = { Name = "${var.project_name}-nat-instance-${local.azs[count.index]}" }
+  tags   = { Name = "${var.resource_prefix}-nat-instance-${local.azs[count.index]}" }
 }
 
 resource "aws_eip_association" "nat_instance" {
@@ -86,7 +86,7 @@ resource "aws_eip_association" "nat_instance" {
 resource "aws_cloudwatch_metric_alarm" "nat_status" {
   count = var.nat_mode == "instance_ha" ? local.az_count : 0
 
-  alarm_name          = "${var.project_name}-nat-instance-${count.index}-status"
+  alarm_name          = "${var.resource_prefix}-nat-instance-${count.index}-status"
   alarm_description   = "Detect a failed NAT instance and trigger degraded cross-AZ route failover"
   namespace           = "AWS/EC2"
   metric_name         = "StatusCheckFailed"

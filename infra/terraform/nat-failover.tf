@@ -9,7 +9,7 @@ data "archive_file" "nat_failover" {
 resource "aws_iam_role" "nat_failover" {
   count = var.nat_mode == "instance_ha" ? 1 : 0
 
-  name_prefix = "${var.project_name}-nat-failover-"
+  name_prefix = "${var.resource_prefix}-nat-failover-"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -54,14 +54,14 @@ resource "aws_iam_role_policy" "nat_failover" {
 resource "aws_cloudwatch_log_group" "nat_failover" {
   count = var.nat_mode == "instance_ha" ? 1 : 0
 
-  name              = "/aws/lambda/${var.project_name}-nat-failover"
+  name              = "/aws/lambda/${var.resource_prefix}-nat-failover"
   retention_in_days = 7
 }
 
 resource "aws_lambda_function" "nat_failover" {
   count = var.nat_mode == "instance_ha" ? 1 : 0
 
-  function_name    = "${var.project_name}-nat-failover"
+  function_name    = "${var.resource_prefix}-nat-failover"
   role             = aws_iam_role.nat_failover[0].arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.13"
@@ -102,7 +102,7 @@ resource "aws_lambda_function" "nat_failover" {
 resource "aws_cloudwatch_event_rule" "nat_failover" {
   count = var.nat_mode == "instance_ha" ? 1 : 0
 
-  name = "${var.project_name}-nat-failover"
+  name = "${var.resource_prefix}-nat-failover"
   event_pattern = jsonencode({
     source      = ["aws.cloudwatch"]
     detail-type = ["CloudWatch Alarm State Change"]
@@ -135,7 +135,7 @@ resource "aws_lambda_permission" "nat_failover" {
 resource "aws_cloudwatch_event_rule" "nat_instance_state" {
   count = var.nat_mode == "instance_ha" ? 1 : 0
 
-  name = "${var.project_name}-nat-instance-state"
+  name = "${var.resource_prefix}-nat-instance-state"
   event_pattern = jsonencode({
     source      = ["aws.ec2"]
     detail-type = ["EC2 Instance State-change Notification"]

@@ -28,6 +28,10 @@ class TerraformWebAsgContractTest(unittest.TestCase):
         self.assertIn("interval            = 5", WEB_TF)
         self.assertIn("unhealthy_threshold = 2", WEB_TF)
 
+    def test_web_ami_is_free_tier_eligible_al2023_x86(self):
+        self.assertIn('values = ["al2023-ami-2023.*-kernel-6.1-x86_64"]', WEB_TF)
+        self.assertIn('name   = "free-tier-eligible"', WEB_TF)
+
 
 if __name__ == "__main__":
     unittest.main()

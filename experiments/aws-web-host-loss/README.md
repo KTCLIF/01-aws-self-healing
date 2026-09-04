@@ -2,6 +2,8 @@
 
 이 디렉터리는 ALB + ASG Terraform을 실제 배포한 뒤에만 사용하는 evidence harness입니다. 현재 단계에서는 실행하지 않았습니다.
 
+Account/state isolation과 apply/destroy 순서는 `docs/aws-web-host-loss-runbook.md`를 먼저 따릅니다.
+
 ## Safety gate
 
 `run-experiment.sh`는 `EXECUTE_AWS_HOST_LOSS=yes`가 없으면 종료합니다. 실행하면 ASG의 healthy instance 한 대를 실제 terminate합니다.

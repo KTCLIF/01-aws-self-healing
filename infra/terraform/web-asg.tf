@@ -6,23 +6,33 @@ data "aws_ami" "web" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-2023.*-x86_64"]
+    values = ["al2023-ami-2023.*-kernel-6.1-x86_64"]
   }
 
   filter {
     name   = "state"
     values = ["available"]
   }
+
+  filter {
+    name   = "free-tier-eligible"
+    values = ["true"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
 }
 
 resource "aws_security_group" "web_alb" {
   count = var.enable_web_asg ? 1 : 0
 
-  name_prefix = "${var.project_name}-web-alb-"
+  name_prefix = "${var.resource_prefix}-web-alb-"
   description = "Public HTTP entry point for the web availability experiment"
   vpc_id      = aws_vpc.main.id
 
-  tags = { Name = "${var.project_name}-web-alb" }
+  tags = { Name = "${var.resource_prefix}-web-alb" }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "web_alb_http" {
@@ -39,11 +49,11 @@ resource "aws_vpc_security_group_ingress_rule" "web_alb_http" {
 resource "aws_security_group" "web_instance" {
   count = var.enable_web_asg ? 1 : 0
 
-  name_prefix = "${var.project_name}-web-instance-"
+  name_prefix = "${var.resource_prefix}-web-instance-"
   description = "Only the experiment ALB can reach web instances"
   vpc_id      = aws_vpc.main.id
 
-  tags = { Name = "${var.project_name}-web-instance" }
+  tags = { Name = "${var.resource_prefix}-web-instance" }
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb_to_web" {
@@ -71,7 +81,7 @@ resource "aws_vpc_security_group_ingress_rule" "web_from_alb" {
 resource "aws_lb" "web" {
   count = var.enable_web_asg ? 1 : 0
 
-  name               = "${substr(var.project_name, 0, 20)}-web"
+  name               = "${substr(var.resource_prefix, 0, 20)}-web"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.web_alb[0].id]
@@ -80,13 +90,13 @@ resource "aws_lb" "web" {
   enable_deletion_protection = false
   drop_invalid_header_fields = true
 
-  tags = { Name = "${var.project_name}-web" }
+  tags = { Name = "${var.resource_prefix}-web" }
 }
 
 resource "aws_lb_target_group" "web" {
   count = var.enable_web_asg ? 1 : 0
 
-  name        = "${substr(var.project_name, 0, 20)}-web"
+  name        = "${substr(var.resource_prefix, 0, 20)}-web"
   port        = 8080
   protocol    = "HTTP"
   target_type = "instance"
@@ -106,7 +116,7 @@ resource "aws_lb_target_group" "web" {
     unhealthy_threshold = 2
   }
 
-  tags = { Name = "${var.project_name}-web" }
+  tags = { Name = "${var.resource_prefix}-web" }
 }
 
 resource "aws_lb_listener" "web_http" {
@@ -125,7 +135,7 @@ resource "aws_lb_listener" "web_http" {
 resource "aws_launch_template" "web" {
   count = var.enable_web_asg ? 1 : 0
 
-  name_prefix   = "${var.project_name}-web-"
+  name_prefix   = "${var.resource_prefix}-web-"
   image_id      = data.aws_ami.web[0].id
   instance_type = var.web_instance_type
   user_data     = base64encode(file("${path.module}/templates/web-user-data.sh"))
@@ -149,10 +159,18 @@ resource "aws_launch_template" "web" {
 
   tag_specifications {
     resource_type = "instance"
-    tags = {
-      Name = "${var.project_name}-web-asg"
+    tags = merge(local.common_tags, {
+      Name = "${var.resource_prefix}-web-asg"
       Role = "stateless-web"
-    }
+    })
+  }
+
+  tag_specifications {
+    resource_type = "volume"
+    tags = merge(local.common_tags, {
+      Name = "${var.resource_prefix}-web-asg-root"
+      Role = "stateless-web"
+    })
   }
 
   update_default_version = true
@@ -161,7 +179,7 @@ resource "aws_launch_template" "web" {
 resource "aws_autoscaling_group" "web" {
   count = var.enable_web_asg ? 1 : 0
 
-  name_prefix         = "${var.project_name}-web-"
+  name_prefix         = "${var.resource_prefix}-web-"
   min_size            = 2
   max_size            = 2
   desired_capacity    = 2
@@ -181,10 +199,17 @@ resource "aws_autoscaling_group" "web" {
     max_healthy_percentage = 100
   }
 
-  tag {
-    key                 = "Name"
-    value               = "${var.project_name}-web-asg"
-    propagate_at_launch = true
+  dynamic "tag" {
+    for_each = merge(local.common_tags, {
+      Name = "${var.resource_prefix}-web-asg"
+      Role = "stateless-web"
+    })
+
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
+    }
   }
 
   lifecycle {
