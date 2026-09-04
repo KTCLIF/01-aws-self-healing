@@ -57,3 +57,17 @@ Curated evidence: `docs/evidence/web-host-loss-local-20260904.json`
 Multi-replica follow-up은 2 replicas를 서로 다른 workers에 배치하고 세 번째 worker를 spare로 사용했습니다. Worker 하나를 상실한 뒤 최종 convergence는 20.417초였으나 continuous HTTP probe 137건 중 6건이 실패해 `degraded_with_intermittent_errors`로 판정했습니다.
 
 AWS ALB+ASG 결과는 아직 없습니다. `experiments/aws-web-host-loss/run-experiment.sh`는 실제 승인된 배포 후 instance termination, target health, ASG convergence, continuous HTTP 결과를 같은 availability metric으로 수집하도록 준비되어 있습니다.
+
+## Resilience dashboard synthetic dry run
+
+The tracked local exporter, Prometheus, and Grafana stack was exercised end to end on 2026-09-04 without AWS resources or credentials. The validator confirmed:
+
+- the provisioned `P01 — AWS Web Host Loss` dashboard loaded successfully;
+- all ten panel metric contracts returned data;
+- HTTP probe, ALB healthy target, and ASG InService series contained both healthy and degraded values;
+- the six ordered phases and five event timestamps were present and aligned;
+- failure and post-recovery intervals were distinguishable; and
+- the feed and generated portfolio summary were explicitly marked synthetic.
+- the actual-experiment start/stop target recreated empty Prometheus storage, removed stale live mock state, provisioned the dashboard, and left no running containers.
+
+The mock used 100 requests with 3 intentional failures, a 5.263% synthetic failure-window error rate, and a 14-second synthetic convergence interval. These numbers validate the pipeline only and **are not AWS runtime evidence**. Mock/raw/curated outputs remain Git-ignored.

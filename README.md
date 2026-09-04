@@ -110,3 +110,5 @@ Multi-replica availability 실험은 최종 convergence에 성공했지만 간�
 AWS Web Host Loss는 [ADR 0003](docs/adr/0003-aws-web-host-recovery.md)에 따라 ALB+ASG로 검증하며, 실제 실행 전까지 `enable_web_asg=false`를 유지합니다.
 
 실행 전에는 [비용 추정](docs/aws-web-cost-estimate.md)과 [격리·실행 runbook](docs/aws-web-host-loss-runbook.md)을 검토해야 합니다.
+
+AWS 실험의 시각 증빙은 [ADR 0004](docs/adr/0004-local-resilience-experiment-dashboard.md)에 따라 로컬 전용 Resilience Experiment Dashboard 하나로 제한합니다. Dashboard는 harness가 수집한 probe/AWS polling 결과를 사용하며 AWS monitoring resource를 만들지 않습니다.

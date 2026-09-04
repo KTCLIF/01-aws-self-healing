@@ -1,0 +1,55 @@
+name: p01-resilience-observability
+
+services:
+  metrics-exporter:
+    image: python:3.12-alpine
+    command:
+      - python3
+      - /app/metrics_exporter.py
+      - --state
+      - /evidence/live-state.json
+      - --listen
+      - 0.0.0.0
+      - --port
+      - "9108"
+    volumes:
+      - ./metrics-exporter:/app:ro
+      - ../../experiments/aws-web-host-loss/artifacts:/evidence:ro
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=2h
+      - --storage.tsdb.path=/tmp/prometheus
+    ports:
+      - "127.0.0.1:${P01_PROMETHEUS_PORT:-39090}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - metrics-exporter
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_USERS_DEFAULT_THEME: light
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_DASHBOARDS_MIN_REFRESH_INTERVAL: 1s
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    ports:
+      - "127.0.0.1:${P01_GRAFANA_PORT:-33000}:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    tmpfs:
+      - /var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
