@@ -14,9 +14,9 @@
     "failure_reason"
   ],
   "properties": {
-    "schema_version": { "const": "1.0" },
+    "schema_version": { "enum": ["1.0", "1.1"] },
     "run_id": { "type": "string", "minLength": 1 },
-    "scenario": { "enum": ["process_failure", "host_failure"] },
+    "scenario": { "enum": ["process_failure", "host_failure", "multi_replica_host_failure"] },
     "failure": {
       "type": "object",
       "required": ["target", "injection"],
@@ -60,6 +60,25 @@
         "new_node": { "type": ["string", "null"] }
       }
     },
+    "availability": {
+      "type": "object",
+      "required": [
+        "probe_interval_ms",
+        "observed_average_start_interval_ms",
+        "total_requests",
+        "successful_requests",
+        "failed_requests",
+        "failure_window_error_rate_percent",
+        "max_consecutive_failures",
+        "max_unavailable_duration_seconds"
+      ]
+    },
     "failure_reason": { "type": ["string", "null"] }
-  }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "scenario": { "const": "multi_replica_host_failure" } } },
+      "then": { "required": ["availability"] }
+    }
+  ]
 }

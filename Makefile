@@ -1,7 +1,7 @@
 PYTHON ?= python3
 TF_DIR := infra/terraform
 
-.PHONY: check test terraform-init terraform-fmt terraform-validate yaml-check shell-check secret-scan web-host-loss-process web-host-loss-host
+.PHONY: check test terraform-init terraform-fmt terraform-validate yaml-check shell-check secret-scan web-host-loss-process web-host-loss-host web-host-loss-multi
 
 check: test terraform-fmt terraform-validate yaml-check shell-check secret-scan
 
@@ -34,3 +34,6 @@ web-host-loss-process:
 
 web-host-loss-host:
 	./experiments/web-host-loss/run-swarm-poc.sh host
+
+web-host-loss-multi:
+	./experiments/web-host-loss/run-multi-replica-poc.sh

@@ -1,13 +1,13 @@
 # ADR 0002: Docker Swarm for the Web Host Loss experiment
 
-- Status: Accepted for the bounded web workload experiment
+- Status: Accepted only for local stateless web resilience experiments
 - Date: 2026-09-04
 
 ## Decision
 
-Docker Swarm을 Web Host Loss scenario의 workload desired-state/rescheduling mechanism으로 제한적으로 채택합니다.
+Docker Swarm을 local Web Host Loss scenario의 workload desired-state/rescheduling mechanism으로 제한적으로 채택합니다.
 
-채택 범위는 “worker host를 잃었을 때 surviving worker에 단일 stateless web task를 다시 만들고 recovery time을 측정한다”입니다. PostgreSQL, monitoring/recovery control plane, 전체 production platform으로 확장하지 않습니다.
+채택 범위는 process/worker host failure에서 stateless web task의 desired state, rescheduling, service availability를 비교하는 local 실험입니다. PostgreSQL, monitoring/recovery control plane, AWS production architecture, 모든 workload의 공통 orchestrator로 확장하지 않습니다.
 
 ## Evidence
 
@@ -36,3 +36,9 @@ Docker Swarm을 Web Host Loss scenario의 workload desired-state/rescheduling me
 - 외부 ALB 관점의 health check와 traffic success rate는 아직 포함하지 않았습니다.
 
 이 한계를 감안해도 기존 process restart와 host rescheduling의 경계를 실행 결과로 보여주므로 포트폴리오 가치가 추가 복잡도보다 큽니다. AWS 단계에서는 EC2 Auto Scaling/ECS와의 대안 비교 없이 Swarm을 production 정답으로 주장하지 않습니다.
+
+## Multi-replica availability follow-up
+
+2 replicas를 서로 다른 worker에 배치하고 active worker 하나를 상실시킨 결과, 최종 desired state는 20.417초에 복구됐지만 continuous probe 137건 중 6건이 실패했습니다. 장애~수렴 구간 error rate는 6.061%, 최대 연속 실패는 1건, 최대 unavailable 관찰치는 1.169초였습니다.
+
+따라서 Swarm은 host loss를 복구했지만 이 구성에서 무중단을 보장하지 않았습니다. 이 결과로 역할 경계를 local resilience mechanism으로 고정하며 AWS web recovery 선택 근거로 자동 승격하지 않습니다.

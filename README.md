@@ -100,3 +100,5 @@ make terraform-init
 상세한 현재/목표 구조는 [docs/architecture.md](docs/architecture.md), 계승 근거는 [docs/provenance.md](docs/provenance.md)를 참고합니다.
 
 Web Host Loss 판정은 [ADR 0002](docs/adr/0002-docker-swarm-for-web-host-loss.md), 실제 local 결과는 [curated evidence](docs/evidence/web-host-loss-local-20260904.json)에 기록했습니다.
+
+Multi-replica availability 실험은 최종 convergence에 성공했지만 간헐적 오류가 있어 무중단으로 판정하지 않았습니다. 결과는 [availability 비교](docs/web-availability-results.md)와 [multi-replica evidence](docs/evidence/web-multi-replica-host-loss-local-20260904.json)에 있습니다.

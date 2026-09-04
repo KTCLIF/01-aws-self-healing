@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "docs" / "evidence" / "web-host-loss-local-20260904.json"
+MULTI_EVIDENCE = ROOT / "docs" / "evidence" / "web-multi-replica-host-loss-local-20260904.json"
 SCHEMA = ROOT / "experiments" / "web-host-loss" / "evidence.schema.json"
 
 
@@ -18,6 +19,7 @@ class WebHostLossEvidenceTest(unittest.TestCase):
     def setUpClass(cls):
         cls.document = json.loads(EVIDENCE.read_text(encoding="utf-8"))
         cls.schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
+        cls.multi = json.loads(MULTI_EVIDENCE.read_text(encoding="utf-8"))
 
     def test_schema_declares_required_evidence(self):
         required = set(self.schema["required"])
@@ -48,6 +50,18 @@ class WebHostLossEvidenceTest(unittest.TestCase):
             host_run["recovery"]["new_node"],
         )
         self.assertTrue(host_run["recovery"]["service_unavailable_observed"])
+
+    def test_multi_replica_evidence_reports_measured_availability(self):
+        run = self.multi
+        availability = run["availability"]
+        self.assertEqual(run["scenario"], "multi_replica_host_failure")
+        self.assertEqual(
+            availability["total_requests"],
+            availability["successful_requests"] + availability["failed_requests"],
+        )
+        self.assertGreater(availability["failed_requests"], 0)
+        self.assertEqual(run["availability_verdict"], "degraded_with_intermittent_errors")
+        self.assertNotEqual(run["recovery"]["original_node"], run["recovery"]["new_node"])
 
 
 if __name__ == "__main__":
